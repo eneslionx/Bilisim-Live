@@ -584,6 +584,7 @@
     padding: 14px 24px; background: white; color: var(--metin-soft);
     border: 1.5px solid #E0E6ED; border-radius: 12px;
     font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit;
+    line-height: 1.2; white-space: nowrap;
     transition: all 0.2s;
     -webkit-tap-highlight-color: rgba(192, 57, 43, 0.15);
     touch-action: manipulation;
@@ -3546,6 +3547,26 @@ function sunumGoster() {
   // Buton durumları
   document.getElementById("sunum-geri-btn").disabled = (sunumIndex === 0);
   document.getElementById("sunum-ileri-btn").disabled = (sunumIndex === SUNUM_SLAYT_GORSELLERI.length - 1);
+
+  // Admin sunum modunda slayt ilerledikçe canlı yayını da aynı slayta taşı
+  canliSunumDurumuYayinla();
+}
+
+async function canliSunumDurumuYayinla() {
+  if (!firebaseHazir || !db) return;
+  if (!document.body.classList.contains("admin-mode")) return;
+  const slaytNo = sunumIndex + 1;
+  try {
+    await db.collection("liveStatus").doc(SESSION_ID).set({
+      aktif: true,
+      slaytNo,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+    const sec = document.getElementById("admin-canli-slayt-secim");
+    if (sec && parseInt(sec.value) !== slaytNo) sec.value = slaytNo;
+  } catch (e) {
+    console.error("[Bilişim Live] sunum canlı yayın güncelleme hatası:", e);
+  }
 }
 
 function sunumIleri() {
